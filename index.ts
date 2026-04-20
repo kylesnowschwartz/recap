@@ -16,13 +16,17 @@ const WIDGET_KEY = "recap";
 const INSTANCE_KEY = "__recap_plugin_active__";
 
 export default async function recap(pi: ExtensionAPI): Promise<void> {
+	// Clean up previous instance (reload / resume)
 	const g = globalThis as Record<string, unknown>;
-	if (g[INSTANCE_KEY]) return; // already loaded
-	g[INSTANCE_KEY] = true;
+	const prev = g[INSTANCE_KEY] as { intervalTimer?: ReturnType<typeof setInterval>; dismissTimer?: ReturnType<typeof setTimeout> } | undefined;
+	if (prev) {
+		if (prev.intervalTimer) clearInterval(prev.intervalTimer);
+		if (prev.dismissTimer) clearTimeout(prev.dismissTimer);
+	}
 
 	const config = await loadRecapConfig(process.cwd());
 	if (!config.enabled) {
-		g[INSTANCE_KEY] = false;
+		g[INSTANCE_KEY] = undefined;
 		return;
 	}
 
@@ -31,6 +35,10 @@ export default async function recap(pi: ExtensionAPI): Promise<void> {
 	let recapInProgress = false;
 	let dismissTimer: ReturnType<typeof setTimeout> | null = null;
 	let intervalTimer: ReturnType<typeof setInterval> | null = null;
+
+	// Store instance state for cleanup on reload
+	const instanceState = { get intervalTimer() { return intervalTimer; }, get dismissTimer() { return dismissTimer; } };
+	g[INSTANCE_KEY] = instanceState;
 
 	/**
 	 * Core recap logic: collect messages, call LLM, display widget.
