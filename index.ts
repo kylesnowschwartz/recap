@@ -27,7 +27,6 @@ export default async function recap(pi: ExtensionAPI): Promise<void> {
 	}
 
 	let latestCtx: ExtensionContext | null = null;
-	let lastRecapTimestamp: string | null = null;
 	let lastRecapMessageCount = 0;
 	let recapInProgress = false;
 	let dismissTimer: ReturnType<typeof setTimeout> | null = null;
@@ -40,21 +39,17 @@ export default async function recap(pi: ExtensionAPI): Promise<void> {
 		const ctx = latestCtx;
 		if (!ctx || recapInProgress) return;
 
-		const collected = collectMessages(
-			ctx.sessionManager,
-			lastRecapTimestamp,
-		);
+		const collected = collectMessages(ctx.sessionManager);
 
-		// Skip if no new messages since last recap
-		if (collected.messageCount === 0) return;
 		// Skip if message count hasn't changed (no new activity)
-		if (collected.messageCount === lastRecapMessageCount && lastRecapTimestamp) return;
+		if (collected.messageCount === lastRecapMessageCount) return;
 
 		recapInProgress = true;
 
 		try {
 			const summary = await generateRecap(
 				collected.text,
+				ctx.getSystemPrompt(),
 				config.model,
 				ctx.modelRegistry,
 			);
@@ -64,7 +59,6 @@ export default async function recap(pi: ExtensionAPI): Promise<void> {
 				return;
 			}
 
-			lastRecapTimestamp = new Date().toISOString();
 			lastRecapMessageCount = collected.messageCount;
 
 			// Show widget
@@ -109,6 +103,42 @@ export default async function recap(pi: ExtensionAPI): Promise<void> {
 	// Capture ctx from agent_start too
 	pi.on("agent_start", async (_event, ctx) => {
 		captureCtx(ctx);
+	});
+
+	// /recap command — manual trigger, intercepted before main loop
+	pi.registerCommand("recap", {
+		description: "Trigger a recap immediately",
+		async handler(_args, ctx) {
+			latestCtx = ctx;
+			const collected = collectMessages(ctx.sessionManager);
+			if (collected.messageCount === 0) {
+				ctx.ui.notify("[recap] No messages to recap.", "info");
+				return;
+			}
+			ctx.ui.notify("[recap] Generating...", "info");
+			const summary = await generateRecap(
+				collected.text,
+				ctx.getSystemPrompt(),
+				config.model,
+				ctx.modelRegistry,
+			);
+			if (!summary) {
+				ctx.ui.notify("[recap] Failed to generate recap.", "error");
+				return;
+			}
+			lastRecapMessageCount = collected.messageCount;
+			ctx.ui.setWidget(WIDGET_KEY, [`📋 ${summary}`], {
+				placement: "aboveEditor",
+			});
+			if (dismissTimer) clearTimeout(dismissTimer);
+			if (config.displaySeconds > 0) {
+				dismissTimer = setTimeout(() => {
+					ctx.ui.setWidget(WIDGET_KEY, undefined);
+					ctx.ui.notify(`recap: ${summary}`, "info");
+					dismissTimer = null;
+				}, config.displaySeconds * 1000);
+			}
+		},
 	});
 
 	// Timer-based recap

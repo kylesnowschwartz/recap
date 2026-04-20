@@ -36,6 +36,7 @@ function findModel(
 
 export async function generateRecap(
 	conversationText: string,
+	originalSystemPrompt: string | undefined,
 	modelName: string,
 	registry: ModelRegistry,
 	signal?: AbortSignal,
@@ -59,13 +60,24 @@ export async function generateRecap(
 		headers: auth.headers,
 	};
 
+	const userParts: string[] = [];
+	if (originalSystemPrompt) {
+		userParts.push(
+			"--- Original system prompt given to the assistant ---",
+			originalSystemPrompt,
+			"--- End of original system prompt ---",
+			"",
+		);
+	}
+	userParts.push(conversationText);
+
 	try {
 		const response = await completeSimple(
 			model,
 			{
 				systemPrompt: SYSTEM_PROMPT,
 				messages: [
-					{ role: "user" as const, content: conversationText, timestamp: Date.now() },
+					{ role: "user" as const, content: userParts.join("\n"), timestamp: Date.now() },
 				],
 			},
 			options,
