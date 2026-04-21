@@ -89,6 +89,12 @@ export async function generateRecap(
 		}
 		return text.trim() || null;
 	} catch (err) {
+		if (
+			signal?.aborted ||
+			(err instanceof Error && err.name === "AbortError")
+		) {
+			return null;
+		}
 		console.error("[recap] LLM call failed:", err);
 		return null;
 	}
