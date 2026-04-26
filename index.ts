@@ -69,14 +69,14 @@ export default async function recap(pi: ExtensionAPI): Promise<void> {
 	}
 
 	function showRecap(ctx: ExtensionContext, summary: string): void {
-		ctx.ui.setWidget(WIDGET_KEY, [`📋 ${summary}`], {
+		ctx.ui.setWidget(WIDGET_KEY, [`✱ recap: ${summary}`], {
 			placement: "aboveEditor",
 		});
 		if (dismissTimer) clearTimeout(dismissTimer);
 		if (config.displaySeconds > 0) {
 			dismissTimer = setTimeout(() => {
 				ctx.ui.setWidget(WIDGET_KEY, undefined);
-				ctx.ui.notify(`recap: ${summary}`, "info");
+				ctx.ui.notify(`✱ recap: ${summary}`, "info");
 				dismissTimer = null;
 			}, config.displaySeconds * 1000);
 		}
