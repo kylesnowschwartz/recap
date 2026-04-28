@@ -54,7 +54,7 @@ All fields are optional — defaults are shown above.
 
 1. **Trigger** — on `agent_end` event and/or periodic `setInterval` (only when agent is idle)
 2. **Collect** — reads the current session branch via `ctx.sessionManager.getBranch()`, extracts recent messages since the last recap
-3. **Summarize** — sends the collected context to a small model via `completeSimple()` with a prompt that asks for a factual standup-style recap
+3. **Summarize** — sends the collected context to a small model via `completeSimple()` with a prompt that asks for a short "welcome back" recap (overall goal, current task, next action) under 40 words
 4. **Display** — `setWidget("recap", ...)` renders above the editor; `setTimeout` clears it and fires `notify()` as a persistent info toast
 
 The recap content never enters the LLM context — it is display-only.

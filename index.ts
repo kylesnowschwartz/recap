@@ -5,13 +5,35 @@
  * auto-dismisses after configurable seconds, then sends as info toast.
  */
 
-import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext, Theme } from "@mariozechner/pi-coding-agent";
+import type { Component } from "@mariozechner/pi-tui";
+import { wrapTextWithAnsi } from "@mariozechner/pi-tui";
 import { loadRecapConfig } from "./config.js";
 import { collectMessages } from "./collect.js";
 import { generateRecap } from "./summarize.js";
 
 const WIDGET_KEY = "recap";
 const INSTANCE_KEY = "__recap_plugin_active__";
+
+/**
+ * Build a Claude-Code-style recap widget:
+ *   ※ recap: <italic body...>
+ *   <continuation>
+ * The ※ is muted, "recap:" is bold accent, body is italic.
+ * Wrapped lines are flush-left; no bar/quote prefix.
+ */
+function buildRecapComponent(summary: string, theme: Theme): Component {
+	const star = theme.fg("muted", "\u203b"); // ※
+	const label = theme.bold(theme.fg("accent", "recap:"));
+	const body = theme.italic(summary);
+	const content = `${star} ${label} ${body}`;
+	return {
+		invalidate() {},
+		render(width: number): string[] {
+			return wrapTextWithAnsi(content, Math.max(1, width));
+		},
+	};
+}
 
 type IntervalTimer = ReturnType<typeof setInterval>;
 type TimeoutTimer = ReturnType<typeof setTimeout>;
@@ -69,14 +91,14 @@ export default async function recap(pi: ExtensionAPI): Promise<void> {
 	}
 
 	function showRecap(ctx: ExtensionContext, summary: string): void {
-		ctx.ui.setWidget(WIDGET_KEY, [`✱ recap: ${summary}`], {
+		ctx.ui.setWidget(WIDGET_KEY, (_tui, theme) => buildRecapComponent(summary, theme), {
 			placement: "aboveEditor",
 		});
 		if (dismissTimer) clearTimeout(dismissTimer);
 		if (config.displaySeconds > 0) {
 			dismissTimer = setTimeout(() => {
 				ctx.ui.setWidget(WIDGET_KEY, undefined);
-				ctx.ui.notify(`✱ recap: ${summary}`, "info");
+				ctx.ui.notify(`※ recap: ${summary}`, "info");
 				dismissTimer = null;
 			}, config.displaySeconds * 1000);
 		}

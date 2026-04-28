@@ -7,13 +7,9 @@ import type { Api, Model, SimpleStreamOptions } from "@mariozechner/pi-ai";
 import type { ModelRegistry } from "@mariozechner/pi-coding-agent";
 
 const SYSTEM_PROMPT = [
-	"You are an objective session recap writer.",
-	"Produce a brief, factual status recap of the conversation so far.",
-	"Structure: what's been accomplished, what's currently happening, what's next.",
-	"Tone: neutral and matter-of-fact, like a concise standup note.",
-	"Can be 1-3 short sentences. No bullet points, no markdown, no formatting.",
-	"Use the same language the conversation is conducted in.",
-	"Stay under 200 characters total. Output only the recap text.",
+	"The user stepped away and is coming back. Recap in under 40 words, 1-2 plain sentences, no markdown.",
+	"Lead with the overall goal and current task, then the one next action.",
+	"Skip root-cause narrative, fix internals, secondary to-dos, and em-dash tangents.",
 ].join("\n");
 
 /**
