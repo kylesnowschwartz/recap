@@ -7,7 +7,7 @@ import type { Api, Model, SimpleStreamOptions } from "@mariozechner/pi-ai";
 import type { ModelRegistry } from "@mariozechner/pi-coding-agent";
 
 const SYSTEM_PROMPT = [
-	"The user stepped away and is coming back. Recap in under 40 words, 1-2 plain sentences, no markdown.",
+	"The user stepped away and is coming back. Recap in under 40 words, 1-2 plain sentences, no markdown, all on a single line.",
 	"Lead with the overall goal and current task, then the one next action.",
 	"Skip root-cause narrative, fix internals, secondary to-dos, and em-dash tangents.",
 ].join("\n");
