@@ -10,6 +10,8 @@ const SYSTEM_PROMPT = [
 	"The user stepped away and is coming back. Recap in under 40 words, 1-2 plain sentences, no markdown, all on a single line.",
 	"Lead with the overall goal and current task, then the one next action.",
 	"Skip root-cause narrative, fix internals, secondary to-dos, and em-dash tangents.",
+	"Good example output:",
+	"Goal: refactoring the recap widget; currently auditing the system prompt. Next: tighten the rules and add a one-shot example.",
 ].join("\n");
 
 /**
@@ -50,7 +52,7 @@ export async function generateRecap(
 	}
 
 	const options: SimpleStreamOptions = {
-		maxTokens: 200,
+		maxTokens: 80,
 		signal,
 		apiKey: auth.apiKey,
 		headers: auth.headers,
