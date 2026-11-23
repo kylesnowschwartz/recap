@@ -24,12 +24,18 @@ const SYSTEM_PROMPT = [
 ].join("\n");
 
 /**
- * Find a model by bare name from available models.
+ * Find a model with working credentials. `provider/id` selects an exact
+ * model; a bare name matches an id exactly, then by substring (shortest id wins).
  */
 function findModel(
 	modelName: string,
 	registry: ModelRegistry,
 ): Model<Api> | undefined {
+	const slash = modelName.indexOf("/");
+	if (slash > 0) {
+		const model = registry.find(modelName.slice(0, slash), modelName.slice(slash + 1));
+		return model && registry.hasConfiguredAuth(model) ? model : undefined;
+	}
 	const available = registry.getAvailable();
 	// Exact id match
 	const exact = available.find((m) => m.id === modelName);
@@ -50,7 +56,10 @@ export async function generateRecap(
 ): Promise<string | null> {
 	const model = findModel(modelName, registry);
 	if (!model) {
-		console.error(`[recap] Model "${modelName}" not found in registry`);
+		console.error(
+			`[recap] Model "${modelName}" has no usable credentials in this pi session. ` +
+				`Set "model" in ~/.pi/recap.jsonc to a "provider/id" pi can use (see /model), or provide that provider's credentials.`,
+		);
 		return null;
 	}
 

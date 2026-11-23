@@ -9,7 +9,7 @@ import { join } from "node:path";
 export interface RecapConfig {
 	/** Timer interval in minutes. 0 = disable timer. */
 	intervalMinutes: number;
-	/** Model to use for recap (bare name, no provider prefix). */
+	/** Model to use for recap: `provider/id`, or a bare name matched against available model ids. */
 	model: string;
 	/** Trigger recap on agent_end. */
 	onAgentEnd: boolean;

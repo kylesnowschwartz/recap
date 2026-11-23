@@ -34,7 +34,8 @@ Create `~/.pi/recap.jsonc` (user-level) or `<project>/.pi/recap.jsonc` (project-
   // Periodic recap interval in minutes. 0 = disable timer.
   "intervalMinutes": 5,
 
-  // Model to use (bare name, no provider prefix).
+  // Model to use: "provider/id" (e.g. "anthropic/claude-haiku-5-5"), or a bare
+  // name matched against the ids of models that have credentials.
   "model": "gpt-5.4-nano",
 
   // Trigger recap when agent finishes a turn.
